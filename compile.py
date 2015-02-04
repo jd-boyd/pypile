@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function
+
 import sexpdata
 from sexpdata import Symbol
 
@@ -34,8 +36,13 @@ def file_postamble(fh):
 """)
 
 
+FIXNUM_MASK = 3
+FIXNUM_TAG = 0
+FIXNUM_SHIFT = 2
+
+
 def emit_funcall(fh, l):
-    print ("EFun")
+    print("emit_funcall")
     {
         "inc": emit_inc,
         "add": emit_add_const
@@ -43,7 +50,7 @@ def emit_funcall(fh, l):
 
 
 def emit_expr(fh, e):
-    print("EEx:", repr(e))
+    print("emit_expr:", repr(e))
     if isinstance(e, int):
         emit_int(fh, e)
         return
@@ -54,7 +61,7 @@ def emit_expr(fh, e):
 
 
 def emit_inc(fh, l):
-    print ("ea1")
+    print("emit_inc")
     emit_int(fh, l[0])
     fh.write("        addl $1, %eax\n")
 
@@ -95,22 +102,3 @@ def make_file(filename, expr):
         function(fh, "cref", expr)
         file_postamble(fh)
 
-def load_file(file_str):
-    file_fcns = ScmFile()
-    statements = sexpdata.parse(file_str)
-    
-    for statement in statements:
-        if statement[0] != Symbol("define"):
-            assert False, "Only define statements handled"
-        proto = statement[1]
-        file_fcns.add(proto[0].tosexp(), proto[1:], statement[2:])
-    return file_fcns
-
-class ScmFile:
-    def __init__(self):
-        self.functions = {}
-
-    def add(self, name, args, fcn):
-        if len(args) > 6:
-            assert False, "6 max args"
-        self.functions[name] = (args, fcn)

@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function
+
 import os
 import subprocess
 import sys
@@ -5,12 +7,18 @@ import sys
 import sexpdata
 from sexpdata import Symbol
 
-import nose
+import nose2
 import tempdir
-from nose.tools import eq_
+#from nose2.tools import eq_
 
 import compile
 
+def eq_(a, b, comment=None):
+    if comment:
+        assert a==b, comment
+
+    if a!=b:
+        assert False, "%r != %r" % (a, b)
 
 def test_return_immediate():
     td = ""
@@ -45,15 +53,3 @@ def test_add_cont():
     ret = subprocess.check_output("./a.out")
     eq_(ret, b"ret 0xdeae89ed\n")
 
-
-def test_parse():
-    s = """
-(define (a b c) 5)
-
-(define (d e f) (+ e f))
-"""
-
-    #o = sexpdata.parse(s)
-    ret = compile.load_file(s)
-    print(ret.functions)
-    assert False
