@@ -9,7 +9,10 @@ class Function:
         self.args = args
         self.body = tuple(body) if isinstance(body, list) else body
     def __repr__(self):
-        return "(define (" + self.name + " " + " ".join([repr(a) for a in self.args]) + ")\n\t" + repr(self.body) + "\n)"
+        body_text = repr(self.body)
+        proto =  [Symbol(self.name)] + self.args
+        proto_text = " ".join([repr(a) for a in proto])
+        return "(define (" + proto_text +  ")\n\t" + body_text + "\n)"
 
 class ScmFile:
     def __init__(self):
