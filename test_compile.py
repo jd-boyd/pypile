@@ -7,9 +7,7 @@ import sys
 import sexpdata
 from sexpdata import Symbol
 
-import nose2
 import tempdir
-#from nose2.tools import eq_
 
 import compile
 
@@ -22,34 +20,34 @@ def eq_(a, b, comment=None):
 
 def test_return_immediate():
     td = ""
-    compile.make_file(os.path.join(td, "test.s"),  0xdeadbeef)
+    compile.make_file(os.path.join(td, "test.s"),  0xbeef)
 
     subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test.s"), 
                     shell=True)
 
     ret = subprocess.check_output("./a.out")
-    eq_(ret, b"ret 0xdeadbeef\n")
+    eq_(ret, b"ret 0xbeef\n")
 
 
 def test_inc():
     td = ""
-    compile.make_file(os.path.join(td, "test2.s"),  [Symbol("inc"), 0xdeadbeef])
+    compile.make_file(os.path.join(td, "test2.s"),  [Symbol("inc"), 0xbeef])
 
     subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test2.s"), 
                     shell=True)
 
     ret = subprocess.check_output("./a.out")
-    eq_(ret, b"ret 0xdeadbef0\n")
+    eq_(ret, b"ret 0xbef0\n")
 
     
-def test_add_cont():
-    td = ""
-    compile.make_file(os.path.join(td, "test2.s"),  
-                      [Symbol("add"), 0xdeadbeef, 0xcafe])
+# def test_add_cont():
+#     td = ""
+#     compile.make_file(os.path.join(td, "test2.s"),  
+#                       [Symbol("add"), 0xdeadbeef, 0xcafe])
 
-    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test2.s"), 
-                    shell=True)
+#     subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test2.s"), 
+#                     shell=True)
 
-    ret = subprocess.check_output("./a.out")
-    eq_(ret, b"ret 0xdeae89ed\n")
+#     ret = subprocess.check_output("./a.out")
+#     eq_(ret, b"ret 0xdeae89ed\n")
 

@@ -7,9 +7,7 @@ import sys
 import sexpdata
 from sexpdata import Symbol
 
-import nose2
 import tempdir
-#from nose2.tools import eq_
 
 import loader
 
