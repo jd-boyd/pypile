@@ -80,17 +80,16 @@ def test_add2():
 
     ret = subprocess.check_output("./a.out")
     eq_(ret, b"ret 0x9\n")
+
+
+def test_add3():
+    td = ""
+    compile.make_file(os.path.join(td, "test7.s"),  [Symbol("+"), [Symbol("+"), 2, 3],  [Symbol("+"), 4, 6]])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test7.s"), 
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0xf\n")
     
-
-    
-# def test_add_cont():
-#     td = ""
-#     compile.make_file(os.path.join(td, "test2.s"),  
-#                       [Symbol("add"), 0xdeadbeef, 0xcafe])
-
-#     subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test2.s"), 
-#                     shell=True)
-
-#     ret = subprocess.check_output("./a.out")
-#     eq_(ret, b"ret 0xdeae89ed\n")
 

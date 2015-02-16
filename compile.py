@@ -106,9 +106,11 @@ def emit_add(fh, x):
     assert len(x) == 2
     print("emit add")
     emit_expr(fh, x[1])
-    emit(fh, "movq %rax, -8(%rsp)")
+    #emit(fh, "movq %rax, -8(%rsp)")
+    emit(fh, "pushq %rax")
     emit_expr(fh, x[0])
-    emit(fh, "addq   -8(%rsp), %rax")
+    emit(fh, "popq %rdx")
+    emit(fh, "addq   %rdx, %rax")
  
 PRIM_CAL_DICT = {
     "inc": emit_inc,
