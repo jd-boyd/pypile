@@ -39,6 +39,49 @@ def test_inc():
     ret = subprocess.check_output("./a.out")
     eq_(ret, b"ret 0xbef0\n")
 
+def test_int_char():
+    td = ""
+    compile.make_file(os.path.join(td, "test3.s"),  [Symbol("int->char"), 1])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test3.s"), 
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0x43\n")
+
+def test_char_int():
+    td = ""
+    compile.make_file(os.path.join(td, "test4.s"),  [Symbol("char->int"), "a"])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test4.s"), 
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0x61\n")
+
+
+def test_add():
+    td = ""
+    compile.make_file(os.path.join(td, "test5.s"),  [Symbol("+"), 3, 4])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test5.s"), 
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0x7\n")
+
+
+def test_add2():
+    td = ""
+    compile.make_file(os.path.join(td, "test6.s"),  [Symbol("+"), [Symbol("+"), 2, 3], 4])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test6.s"), 
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0x9\n")
+    
+
     
 # def test_add_cont():
 #     td = ""

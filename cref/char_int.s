@@ -1,8 +1,8 @@
-	.file	"two_func.c"
+	.file	"char_int.c"
 	.text
-	.globl	func2
-	.type	func2, @function
-func2:
+	.globl	char_int
+	.type	char_int, @function
+char_int:
 .LFB0:
 	.cfi_startproc
 	pushq	%rbp
@@ -11,16 +11,15 @@ func2:
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
 	movl	%edi, -4(%rbp)
-	movl	%esi, -8(%rbp)
-	movl	-4(%rbp), %edx
-	movl	-8(%rbp), %eax
-	addl	%edx, %eax
+	movl	-4(%rbp), %eax
+	sarl	$8, %eax
+	sall	$2, %eax
 	popq	%rbp
 	.cfi_def_cfa 7, 8
 	ret
 	.cfi_endproc
 .LFE0:
-	.size	func2, .-func2
+	.size	char_int, .-char_int
 	.globl	cref
 	.type	cref, @function
 cref:
@@ -31,10 +30,8 @@ cref:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
-	movl	$12, %esi
-	movl	$51966, %edi
-	call	func2
-	subl	$559038737, %eax
+	movl	$271, %edi
+	call	char_int
 	popq	%rbp
 	.cfi_def_cfa 7, 8
 	ret

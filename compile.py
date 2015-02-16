@@ -36,21 +36,25 @@ def file_postamble(fh):
 """)
 
 
-FIXNUM_MASK = 3
+FIXNUM_MASK = 0b11
 FIXNUM_TAG = 0
 FIXNUM_SHIFT = 2
+
+CHAR_MASK = 0b11111111
+CHAR_TAG =  0b00001111
+CHAR_SHIFT = 8
+
+BOOL_MASK = 0b1111111
+BOOL_TAG =  0b0011111
+BOOL_SHIFT = 7
+
+EMPTY_MASK = 0b11111111
+EMPTY_TAG =  0b00101111
+EMPTY_SHIFT = 8
 
 def emit(fh, instruction):
     fh.write("        " + instruction + "\n")
         
-
-def emit_funcall(fh, l):
-    print("emit_funcall")
-    {
-        "inc": emit_inc,
-        "add": emit_add_const
-    }[l[0].tosexp()](fh, l[1:])
-
 
 def emit_expr(fh, x):
     print("emit_expr:", repr(x))
@@ -61,13 +65,32 @@ def emit_expr(fh, x):
         assert False, "If not primitive, must be call."
 
     if is_primcall(x):
-        {
-            "inc": emit_inc,
-            "add1": emit_inc
-        }[x[0].tosexp()](fh, x[1:])
+        PRIM_CAL_DICT[x[0].tosexp()](fh, x[1:])
         return
- 
+        
     assert False, "Couldn't figure out what to emit"
+
+
+def emit_null(x):
+    pass
+
+
+def emit_zero(x):
+    pass
+
+
+def emit_int_char(fh, x):
+    emit_expr(fh, x[0])
+    emit(fh, "sall $6, %eax")
+    emit(fh, "orl $15, %eax")
+
+
+def emit_char_int(fh, x):
+    print("emit_char_int(", x, ")")
+    emit_expr(fh, x[0])
+    emit(fh, "sarl $8, %eax")
+    emit(fh, "sall $2, %eax")
+
 
 def emit_inc(fh, l):
     print("emit_inc")
@@ -75,26 +98,38 @@ def emit_inc(fh, l):
     emit(fh, "addl ${0}, %eax".format(immediate_rep(1)))
 
 
-def emit_add_const(fh, l):
-    emit_expr(fh, l[0])
-    emit(fh, "addl ${0}, %eax".format(immediate_rep(l[1])))
-  
+def emit_mul(fx, x):
+    pass
+ 
+
+def emit_add(fh, x):
+    assert len(x) == 2
+    print("emit add")
+    emit_expr(fh, x[1])
+    emit(fh, "movq %rax, -8(%rsp)")
+    emit_expr(fh, x[0])
+    emit(fh, "addq   -8(%rsp), %rax")
+ 
+PRIM_CAL_DICT = {
+    "inc": emit_inc,
+    "add1": emit_inc,
+    "int->char": emit_int_char,
+    "char->int": emit_char_int,
+    "+": emit_add,
+    "*": emit_mul,
+}
+
 
 def function(fh, fname, f):
-    function_pre(fh, fname)
-    emit_expr(fh, f)
-    emit(fh, "ret")
-    function_end(fh, fname)
-
-def function_pre(fh, fname):
     emit(fh, ".globl  %s" % fname)
     emit(fh, ".type   %s, @function" % fname)
     fh.write("%s:\n" % fname)
     fh.write(".LFB0:\n")
     emit(fh, ".cfi_startproc")
 
+    emit_expr(fh, f)
 
-def function_end(fh, fname):
+    emit(fh, "ret")
     emit(fh, ".cfi_endproc")
     fh.write(".LFE0:\n")
     emit(fh, ".size   %s, .-%s" % (fname, fname))
@@ -109,6 +144,8 @@ def make_file(filename, expr):
 def is_immediate(x):
     if type(x) is int:
         return True
+    if type(x) is str:
+        return True
     return False
 
 
@@ -120,12 +157,19 @@ def is_primcall(x):
     if not type(x[0]) is Symbol:
         return False
     sym = x[0].value()
-    return sym in ['add1', 'inc']
+    return sym in PRIM_CAL_DICT
 
 
 def immediate_rep(x):
     if type(x) is int:
-        return x << FIXNUM_SHIFT
+        return x << FIXNUM_SHIFT | FIXNUM_TAG
+
+    if type(x) is bool:
+        return (x << BOOL_SHIFT) | BOOL_TAG
+
+    if type(x) is str:
+        return (ord(x[0]) << CHAR_SHIFT) | CHAR_TAG
+
     assert False
 
 def compile_program(fh, x):
