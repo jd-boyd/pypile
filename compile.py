@@ -52,6 +52,13 @@ EMPTY_MASK = 0b11111111
 EMPTY_TAG =  0b00101111
 EMPTY_SHIFT = 8
 
+label_count = 0
+def unique_label():
+    lbl = "L_%d" % label_count
+    label_count += 1
+    return lbl
+
+
 def emit(fh, instruction):
     fh.write("        " + instruction + "\n")
         
