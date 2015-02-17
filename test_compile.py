@@ -103,4 +103,46 @@ def test_mull():
     ret = subprocess.check_output("./a.out")
     eq_(ret, b"ret 0xc\n")
     
+def test_let():
+    td = ""
+    compile.make_file(os.path.join(td, "test9.s"),  [Symbol("let"), [[Symbol("bob"), 5]],  6])
 
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test9.s"), 
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0x6\n")
+
+def test_var():
+    td = ""
+    compile.make_file(os.path.join(td, "test10.s"),  [Symbol("let"), [[Symbol("bob"), 5]],  Symbol("bob")])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test10.s"), 
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0x5\n")
+
+def test_var2():
+    td = ""
+    compile.make_file(os.path.join(td, "test11.s"),  [Symbol("let"), [[Symbol("bob"), 5]],  [Symbol("+"), 2, Symbol("bob")]])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test11.s"), 
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0x7\n")
+
+
+def test_var2():
+    td = ""
+    compile.make_file(os.path.join(td, "test12.s"),  
+                      [Symbol("let"), [[Symbol("bob"), 5],
+                                       [Symbol("fred"), 3]],  
+                       [Symbol("+"), Symbol("fred"), Symbol("bob")]])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test12.s"), 
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0x8\n")

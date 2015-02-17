@@ -68,20 +68,59 @@ def emit_expr(fh, x, si, env):
     if is_immediate(x):
         emit(fh, "mov ${0}, %eax".format(immediate_rep(x)))
         return
-    if not is_call(x):
-        assert False, "If not primitive, must be call."
+
+    if is_var(x, env):
+        emit_var(fh, x, si, env)
+        return
 
     if is_primcall(x):
         PRIM_CALL_DICT[x[0].tosexp()](fh, x[1:], si, env)
         return
 
     if is_let(x):
-        pass
+        emit_let(fh, x[1], x[2], si, env)
+        return
 
-    if is_var(x, env):
-        pass
         
     assert False, "Couldn't figure out what to emit"
+
+
+def emit_var(fh, x, si, env):
+    name = x.value()
+    print("n", name)
+    emit(fh, "movq {0}(%rsp), %rax".format(env[name]))
+
+def emit_let(fh, bindings, body, si, env):
+    print("let", bindings, body, si, env)
+    if not len(bindings):
+        emit_expr(fh, body, si, env)
+        return
+    #do something
+    bind = bindings[0]
+    bind_name = bind[0].value()
+    emit_expr(fh, bind[1], si, env)
+    emit(fh, "movq %rax, {0}(%rsp)".format(si))
+    env[bind_name] = si
+    emit_let(fh, bindings[1:], body, si-8, env)
+
+
+def emit_mul(fh, x, si, env):
+    assert len(x) == 2
+    print("emit add")
+    emit_expr(fh, x[1], si, env)
+    emit(fh, "movq %rax, {0}(%rsp)".format(si))
+    emit_expr(fh, x[0], si-8, env)
+    emit(fh, "imulq   {0}(%rsp), %rax".format(si))
+    emit(fh, "sarl $2, %eax")
+ 
+
+def emit_add(fh, x, si, env):
+    assert len(x) == 2
+    print("emit add")
+    emit_expr(fh, x[1], si, env)
+    emit(fh, "movq %rax, {0}(%rsp)".format(si))
+    emit_expr(fh, x[0], si-8, env)
+    emit(fh, "addq   {0}(%rsp), %rax".format(si))
 
 
 def emit_null(x, si):
@@ -111,26 +150,7 @@ def emit_inc(fh, l, si, env):
     emit(fh, "addl ${0}, %eax".format(immediate_rep(1)))
 
 
-def emit_mul(fh, x, si, env):
-    assert len(x) == 2
-    print("emit add")
-    emit_expr(fh, x[1], si, env)
-    emit(fh, "movq %rax, {0}(%rsp)".format(si))
-    emit_expr(fh, x[0], si-8, env)
-    emit(fh, "imulq   {0}(%rsp), %rax".format(si))
-    emit(fh, "sarl $2, %eax")
- 
 
-def emit_add(fh, x, si, env):
-    assert len(x) == 2
-    print("emit add")
-    emit_expr(fh, x[1], si, env)
-    emit(fh, "movq %rax, {0}(%rsp)".format(si))
-    emit_expr(fh, x[0], si-8, env)
-    emit(fh, "addq   {0}(%rsp), %rax".format(si))
-
-def emit_let(fh, x, si, env):
-    pass
  
 PRIM_CALL_DICT = {
     "inc": emit_inc,
@@ -183,13 +203,18 @@ def is_primcall(x):
 
 
 def is_var(x, env):
-    return x in env
+    print("iv", x)
+    if not type(x) is Symbol:
+        return False
+    return x.value() in env
 
 
 def is_let(x):
+    print("il", x)
     if not type(x[0]) is Symbol:
         return False
-    pass
+    return x[0].value() == "let"
+
 
 def immediate_rep(x):
     if type(x) is int:
