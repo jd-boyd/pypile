@@ -63,7 +63,7 @@ def emit(fh, instruction):
     fh.write("        " + instruction + "\n")
         
 
-def emit_expr(fh, x, si):
+def emit_expr(fh, x, si, env):
     print("emit_expr:", repr(x))
     if is_immediate(x):
         emit(fh, "mov ${0}, %eax".format(immediate_rep(x)))
@@ -72,8 +72,14 @@ def emit_expr(fh, x, si):
         assert False, "If not primitive, must be call."
 
     if is_primcall(x):
-        PRIM_CALL_DICT[x[0].tosexp()](fh, x[1:], si)
+        PRIM_CALL_DICT[x[0].tosexp()](fh, x[1:], si, env)
         return
+
+    if is_let(x):
+        pass
+
+    if is_var(x, env):
+        pass
         
     assert False, "Couldn't figure out what to emit"
 
@@ -86,36 +92,39 @@ def emit_zero(x, si):
     pass
 
 
-def emit_int_char(fh, x, si):
-    emit_expr(fh, x[0], si)
+def emit_int_char(fh, x, si, env):
+    emit_expr(fh, x[0], si, env)
     emit(fh, "sall $6, %eax")
     emit(fh, "orl $15, %eax")
 
 
-def emit_char_int(fh, x, si):
+def emit_char_int(fh, x, si, env):
     print("emit_char_int(", x, ")")
-    emit_expr(fh, x[0], si)
+    emit_expr(fh, x[0], si, env)
     emit(fh, "sarl $8, %eax")
     emit(fh, "sall $2, %eax")
 
 
-def emit_inc(fh, l, si):
+def emit_inc(fh, l, si, env):
     print("emit_inc")
-    emit_expr(fh, l[0], si)
+    emit_expr(fh, l[0], si, env)
     emit(fh, "addl ${0}, %eax".format(immediate_rep(1)))
 
 
-def emit_mul(fx, x, si):
+def emit_mul(fx, x, si, env):
     pass
  
 
-def emit_add(fh, x, si):
+def emit_add(fh, x, si, env):
     assert len(x) == 2
     print("emit add")
-    emit_expr(fh, x[1], si)
+    emit_expr(fh, x[1], si, env)
     emit(fh, "movq %rax, {0}(%rsp)".format(si))
-    emit_expr(fh, x[0], si-8)
+    emit_expr(fh, x[0], si-8, env)
     emit(fh, "addq   {0}(%rsp), %rax".format(si))
+
+def emit_let(fh, x, si, env):
+    pass
  
 PRIM_CALL_DICT = {
     "inc": emit_inc,
@@ -134,7 +143,7 @@ def function(fh, fname, f):
     fh.write(".LFB0:\n")
     emit(fh, ".cfi_startproc")
 
-    emit_expr(fh, f, -8)
+    emit_expr(fh, f, -8, {})
 
     emit(fh, "ret")
     emit(fh, ".cfi_endproc")
@@ -166,6 +175,15 @@ def is_primcall(x):
     sym = x[0].value()
     return sym in PRIM_CALL_DICT
 
+
+def is_var(x, env):
+    return x in env
+
+
+def is_let(x):
+    if not type(x[0]) is Symbol:
+        return False
+    pass
 
 def immediate_rep(x):
     if type(x) is int:
