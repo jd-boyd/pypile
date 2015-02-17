@@ -63,7 +63,7 @@ def emit(fh, instruction):
     fh.write("        " + instruction + "\n")
         
 
-def emit_expr(fh, x):
+def emit_expr(fh, x, si):
     print("emit_expr:", repr(x))
     if is_immediate(x):
         emit(fh, "mov ${0}, %eax".format(immediate_rep(x)))
@@ -72,54 +72,54 @@ def emit_expr(fh, x):
         assert False, "If not primitive, must be call."
 
     if is_primcall(x):
-        PRIM_CAL_DICT[x[0].tosexp()](fh, x[1:])
+        PRIM_CALL_DICT[x[0].tosexp()](fh, x[1:], si)
         return
         
     assert False, "Couldn't figure out what to emit"
 
 
-def emit_null(x):
+def emit_null(x, si):
     pass
 
 
-def emit_zero(x):
+def emit_zero(x, si):
     pass
 
 
-def emit_int_char(fh, x):
-    emit_expr(fh, x[0])
+def emit_int_char(fh, x, si):
+    emit_expr(fh, x[0], si)
     emit(fh, "sall $6, %eax")
     emit(fh, "orl $15, %eax")
 
 
-def emit_char_int(fh, x):
+def emit_char_int(fh, x, si):
     print("emit_char_int(", x, ")")
-    emit_expr(fh, x[0])
+    emit_expr(fh, x[0], si)
     emit(fh, "sarl $8, %eax")
     emit(fh, "sall $2, %eax")
 
 
-def emit_inc(fh, l):
+def emit_inc(fh, l, si):
     print("emit_inc")
-    emit_expr(fh, l[0])
+    emit_expr(fh, l[0], si)
     emit(fh, "addl ${0}, %eax".format(immediate_rep(1)))
 
 
-def emit_mul(fx, x):
+def emit_mul(fx, x, si):
     pass
  
 
-def emit_add(fh, x):
+def emit_add(fh, x, si):
     assert len(x) == 2
     print("emit add")
-    emit_expr(fh, x[1])
+    emit_expr(fh, x[1], si)
     #emit(fh, "movq %rax, -8(%rsp)")
     emit(fh, "pushq %rax")
-    emit_expr(fh, x[0])
+    emit_expr(fh, x[0], si)
     emit(fh, "popq %rdx")
     emit(fh, "addq   %rdx, %rax")
  
-PRIM_CAL_DICT = {
+PRIM_CALL_DICT = {
     "inc": emit_inc,
     "add1": emit_inc,
     "int->char": emit_int_char,
@@ -136,7 +136,7 @@ def function(fh, fname, f):
     fh.write(".LFB0:\n")
     emit(fh, ".cfi_startproc")
 
-    emit_expr(fh, f)
+    emit_expr(fh, f, -8)
 
     emit(fh, "ret")
     emit(fh, ".cfi_endproc")
@@ -166,7 +166,7 @@ def is_primcall(x):
     if not type(x[0]) is Symbol:
         return False
     sym = x[0].value()
-    return sym in PRIM_CAL_DICT
+    return sym in PRIM_CALL_DICT
 
 
 def immediate_rep(x):
@@ -182,5 +182,5 @@ def immediate_rep(x):
     assert False
 
 def compile_program(fh, x):
-    emit_expr(fh, x)
+    emit_expr(fh, x, -8)
     emit(fh, "ret")
