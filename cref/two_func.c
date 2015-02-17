@@ -1,5 +1,5 @@
 int func2(int x, int y) {
-  return x + y;
+  return x * y;
 }
 
 int cref() {

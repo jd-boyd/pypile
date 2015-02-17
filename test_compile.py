@@ -93,3 +93,14 @@ def test_add3():
     eq_(ret, b"ret 0xf\n")
     
 
+def test_mull():
+    td = ""
+    compile.make_file(os.path.join(td, "test8.s"),  [Symbol("*"), 3,  4])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test8.s"), 
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0xc\n")
+    
+

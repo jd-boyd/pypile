@@ -111,8 +111,14 @@ def emit_inc(fh, l, si, env):
     emit(fh, "addl ${0}, %eax".format(immediate_rep(1)))
 
 
-def emit_mul(fx, x, si, env):
-    pass
+def emit_mul(fh, x, si, env):
+    assert len(x) == 2
+    print("emit add")
+    emit_expr(fh, x[1], si, env)
+    emit(fh, "movq %rax, {0}(%rsp)".format(si))
+    emit_expr(fh, x[0], si-8, env)
+    emit(fh, "imulq   {0}(%rsp), %rax".format(si))
+    emit(fh, "sarl $2, %eax")
  
 
 def emit_add(fh, x, si, env):
