@@ -285,7 +285,9 @@ def emit_expr(fh, x):
 
 				<section>
 					<h2>The Stack</h2>
-					<p>The stack pointer is esp/rsp.</p>
+					<p>The stack pointer is %rsp.</p>
+					<p>It is changed on function calls, and
+					  we can allocate variables on the stack by doing "-8*i(%rsp)", where i is the number of variables on the stack, and 8 is the size of variable.</p>
 				</section>
 
 
