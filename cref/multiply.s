@@ -1,4 +1,4 @@
-	.file	"two_func.c"
+	.file	"multiply.c"
 	.text
 	.globl	func2
 	.type	func2, @function
@@ -12,9 +12,8 @@ func2:
 	.cfi_def_cfa_register 6
 	movl	%edi, -4(%rbp)
 	movl	%esi, -8(%rbp)
-	movl	-4(%rbp), %edx
-	movl	-8(%rbp), %eax
-	addl	%edx, %eax
+	movl	-4(%rbp), %eax
+	imull	-8(%rbp), %eax
 	popq	%rbp
 	.cfi_def_cfa 7, 8
 	ret
@@ -41,5 +40,5 @@ cref:
 	.cfi_endproc
 .LFE1:
 	.size	cref, .-cref
-	.ident	"GCC: (Ubuntu 4.9.1-16ubuntu6) 4.9.1"
+	.ident	"GCC: (Ubuntu 4.8.2-19ubuntu1) 4.8.2"
 	.section	.note.GNU-stack,"",@progbits
