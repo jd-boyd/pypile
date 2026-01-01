@@ -134,13 +134,64 @@ def test_var2():
 
 def test_var2():
     td = ""
-    compile.make_file(os.path.join(td, "test12.s"),  
+    compile.make_file(os.path.join(td, "test12.s"),
                       [Symbol("let"), [[Symbol("bob"), 5],
-                                       [Symbol("fred"), 3]],  
+                                       [Symbol("fred"), 3]],
                        [Symbol("+"), Symbol("fred"), Symbol("bob")]])
 
-    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test12.s"), 
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test12.s"),
                     shell=True)
 
     ret = subprocess.check_output("./a.out")
     eq_(ret, b"ret 0x8\n")
+
+
+def test_if_true():
+    td = ""
+    compile.make_file(os.path.join(td, "test13.s"),
+                      [Symbol("if"), True, 10, 20])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test13.s"),
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0xa\n")
+
+
+def test_if_false():
+    td = ""
+    compile.make_file(os.path.join(td, "test14.s"),
+                      [Symbol("if"), False, 10, 20])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test14.s"),
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0x14\n")
+
+
+def test_if_nested():
+    td = ""
+    compile.make_file(os.path.join(td, "test15.s"),
+                      [Symbol("if"), True,
+                       [Symbol("if"), False, 1, 2],
+                       3])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test15.s"),
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0x2\n")
+
+
+def test_if_with_let():
+    td = ""
+    compile.make_file(os.path.join(td, "test16.s"),
+                      [Symbol("let"), [[Symbol("x"), 5]],
+                       [Symbol("if"), False, Symbol("x"), [Symbol("+"), Symbol("x"), 1]]])
+
+    subprocess.call("gcc -g cref/main.c " + os.path.join(td, "test16.s"),
+                    shell=True)
+
+    ret = subprocess.check_output("./a.out")
+    eq_(ret, b"ret 0x6\n")

@@ -52,6 +52,7 @@ EMPTY_SHIFT = 8
 
 label_count = 0
 def unique_label():
+    global label_count
     lbl = "L_%d" % label_count
     label_count += 1
     return lbl
